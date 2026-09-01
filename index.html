@@ -535,16 +535,7 @@ var aagb_local_object = {"ajax_url":"https://invitimo2.my.id/wp-admin/admin-ajax
 	</script>
 <meta name="generator" content="Elementor 4.1.4; features: additional_custom_breakpoints; settings: css_print_method-external, google_font-enabled, font_display-auto">
 <script type="text/javascript">
-        function hardReload() {
-            localStorage.removeItem('hardReload');
-            window.location.reload(true);
-        }
-        window.addEventListener('beforeunload', function (event) {
-            localStorage.setItem('hardReload', 'true');
-        });
-        if (localStorage.getItem('hardReload') === 'true') {
-            hardReload();
-        }
+        // hardReload disabled for smooth coverpage - prevents double reload lag
         window.onbeforeunload = function () {
             window.scrollTo(0, 0);
         };
@@ -846,6 +837,7 @@ html {
     contain-intrinsic-size: auto 1000px;
 }
 </style>
+	<link rel="preload" as="image" href="coverpage.jpeg" fetchpriority="high">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"></head>
 <body class="wp-singular post-template-default single single-post postid-30212 single-format-standard wp-custom-logo wp-embed-responsive wp-theme-weddingsaas-wp wp-child-theme-weddingsaas-wp-child elementor-default elementor-template-canvas elementor-kit-7 elementor-page-30207 elementor-page-916707 elementor-page-843619 elementor-page-843600 elementor-page-805683">
 	<!-- Google Tag Manager (noscript) -->
