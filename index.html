@@ -1393,7 +1393,7 @@ html {
 							<li class="elementor-icon-list-item">
 											<span class="elementor-icon-list-icon">
 							<i aria-hidden="true" class="fas fa-clock"></i>						</span>
-										<span class="elementor-icon-list-text">06:00 PM - 09:00 PM WIB</span>
+										<span class="elementor-icon-list-text">06:00 PM - 08:00 PM WIB</span>
 									</li>
 						</ul>
 						</div>
@@ -2279,10 +2279,10 @@ btn_gift.onclick = function(){
                     </div>
                     <div style="padding:16px;text-align:center;">
                         <p id="barcode-guest-name" style="font-weight:700;color:#0e3e1e;font-size:16px;margin:0 0 4px;">
-                            <span id="barcode-guest-text">Guest</span>
+                            <span id="barcode-guest-text">Dear Guest</span>
                         </p>
                         <p style="margin:0;color:#55624e;font-size:12px;">Saturday, November 14, 2026</p>
-                        <p style="margin:2px 0 10px;color:#55624e;font-size:12px;">06:00 PM - 09:00 PM (Reception)</p>
+                        <p style="margin:2px 0 10px;color:#55624e;font-size:12px;">06:00 PM - 08:00 PM (Reception)</p>
                         <img id="barcode-qr" src="" alt="QR Code" style="width:180px;height:180px;margin:0 auto;display:block;border:1px solid #e8ece5;border-radius:8px;padding:6px;background:#fff;">
                         <p style="margin:8px 0 0;color:#0e3e1e;font-size:10px;letter-spacing:0.5px;">Please present this barcode upon check-in</p>
                         <a id="barcode-download" href="#" download="barcode-Anggi-Nia.png" style="display:inline-block;margin-top:10px;background:#ccd3c5;color:#0e3e1e;border:none;padding:8px 18px;border-radius:20px;font-size:13px;cursor:pointer;text-decoration:none;font-weight:600;margin-right:8px;">Download Barcode</a>
@@ -2496,7 +2496,7 @@ btn_gift.onclick = function(){
         (function() {
             // Format guest name: converts "dan"/"and"/"+" to "&", capitalizes words (e.g. "Willy dan sisi" -> "Willy & Sisi")
             function formatGuestName(raw) {
-                if (!raw) return '';
+                if (!raw) return 'Dear Guest';
                 let name = raw.toString().trim();
                 try {
                     name = decodeURIComponent(name.replace(/\+/g, ' '));
@@ -2507,6 +2507,11 @@ btn_gift.onclick = function(){
                 // Clean spaces around "&"
                 name = name.replace(/\s*&\s*/g, ' & ');
                 name = name.replace(/\s+/g, ' ').trim();
+
+                const lower = name.toLowerCase();
+                if (!name || lower === 'guest' || lower === 'dear guest' || lower === 'tamu undangan' || lower === 'tamu') {
+                    return 'Dear Guest';
+                }
 
                 // Capitalize each word properly (Title Case), keep "&" as is
                 name = name.split(' ').map(function(word) {
@@ -2528,14 +2533,19 @@ btn_gift.onclick = function(){
                 const fullRegex = /(?:[?&#])(?:to|guest|nama|name|u|n)=([^&#]+(?:&(?![\w_]+=[^&#]*)[^&#]+)*)/i;
                 const fullMatch = href.match(fullRegex);
                 if (fullMatch && fullMatch[1]) {
-                    return fullMatch[1];
+                    const candidate = fullMatch[1].trim();
+                    if (candidate && !['dear guest', 'guest', 'tamu undangan'].includes(candidate.toLowerCase())) {
+                        return candidate;
+                    }
                 }
 
                 // 2. Try URLSearchParams
                 try {
                     const sp = new URLSearchParams(search);
                     for (let key of ['to', 'guest', 'nama', 'name', 'u', 'n']) {
-                        if (sp.has(key) && sp.get(key)) return sp.get(key);
+                        if (sp.has(key) && sp.get(key) && sp.get(key).trim()) {
+                            return sp.get(key).trim();
+                        }
                     }
                 } catch(e) {}
 
@@ -2545,24 +2555,21 @@ btn_gift.onclick = function(){
                     try {
                         const hp = new URLSearchParams(hashClean);
                         for (let key of ['to', 'guest', 'nama', 'name', 'u', 'n']) {
-                            if (hp.has(key) && hp.get(key)) return hp.get(key);
+                            if (hp.has(key) && hp.get(key) && hp.get(key).trim()) {
+                                return hp.get(key).trim();
+                            }
                         }
                     } catch(e) {}
-                    if (hashClean.startsWith('to=')) return hashClean.substring(3);
+                    if (hashClean.startsWith('to=')) return hashClean.substring(3).trim();
                 }
 
-                // 4. Try sessionStorage
+                // Remove any old cached test names from storage so it never persists across visits
                 try {
-                    const saved = sessionStorage.getItem('invitation_guest_name');
-                    if (saved) return saved;
+                    sessionStorage.removeItem('invitation_guest_name');
+                    localStorage.removeItem('invitation_guest_name');
                 } catch(e) {}
 
-                // 5. Try RSVP input field
-                const rsvp = document.getElementById('author');
-                if (rsvp && rsvp.value && rsvp.value.trim() && !['dear guest', 'guest', 'tamu undangan'].includes(rsvp.value.trim().toLowerCase())) {
-                    return rsvp.value.trim();
-                }
-
+                // If no URL parameter is provided, return empty so it strictly defaults to 'Dear Guest'
                 return '';
             }
 
@@ -2571,14 +2578,10 @@ btn_gift.onclick = function(){
             function updateGuestDisplay(name) {
                 let formatted = formatGuestName(name);
                 if (!formatted) {
-                    formatted = 'Guest';
+                    formatted = 'Dear Guest';
                 }
                 currentGuestName = formatted;
                 window.currentInvitationGuestName = formatted;
-
-                try {
-                    sessionStorage.setItem('invitation_guest_name', formatted);
-                } catch(e) {}
 
                 // Update Cover heading
                 const coverDear = document.querySelector('.elementor-element-1c21ab0c .elementor-heading-title');
@@ -2604,7 +2607,7 @@ btn_gift.onclick = function(){
                     nameEl.textContent = formatted;
                 }
 
-                // Barcode QR Code: Encodes EXACTLY the guest name so any scanner detects the guest name directly (e.g. Willy & Sisi)
+                // Barcode QR Code: Encodes EXACTLY the guest name so any scanner detects the guest name directly
                 const qrImg = document.getElementById('barcode-qr');
                 if (qrImg) {
                     qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(formatted);
